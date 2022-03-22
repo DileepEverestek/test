@@ -1,22 +1,28 @@
+import bcrypt
+
 from src.core.hashing import Hasher
 from src.models.models import User
-from src.schemas.schemas import UserCreate
+from src.schemas.schemas import create_new_user
 from sqlalchemy.orm import Session
 
 
 
-def create_new_user(user: UserCreate, db: Session):
-    user = User(
-        username=user.username,
-        email=user.email,
-        hashed_password=bytes(user.password,'ascii'),
-        is_active=True,
-        is_superuser=False,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+def create_user(request: create_new_user, db: Session):
+    query1 = db.query(User).filter(User.email == request.email).first()
+    if not query1:
+        query = User.user(
+            email=request.email,
+            hashed_password = request.hashed_password,
+        )
+        db.add(query)
+        db.commit()
+        db.refresh(query)
+        return {"Details": "Account Created"}
+
+    else:
+        return {"Details:" "Email already exists"}
+
+
 
 
 def get_user_by_email(email: str, db: Session):
